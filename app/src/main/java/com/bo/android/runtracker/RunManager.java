@@ -3,6 +3,7 @@ package com.bo.android.runtracker;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.location.Location;
 import android.location.LocationManager;
 import android.util.Log;
 
@@ -40,11 +41,23 @@ public class RunManager {
     public void startLocationUpdates() {
         String provider = LocationManager.GPS_PROVIDER;
         PendingIntent pi = getLocationPendingIntent(true);
+
         try {
+            Location lastKnown = mLocationManager.getLastKnownLocation(provider);
+            if (lastKnown != null) {
+                lastKnown.setTime(System.currentTimeMillis());
+                broadcastLocation(lastKnown);
+            }
             mLocationManager.requestLocationUpdates(provider, 0, 0, pi);
         } catch (SecurityException x) {
             Log.e(TAG, "requestLocationUpdates failed", x);
         }
+    }
+
+    private void broadcastLocation(Location location) {
+        Intent broadcast = new Intent(ACTION_LOCATION);
+        broadcast.putExtra(LocationManager.KEY_LOCATION_CHANGED, location);
+        mAppContext.sendBroadcast(broadcast);
     }
 
     public void stopLocationUpdates() {
