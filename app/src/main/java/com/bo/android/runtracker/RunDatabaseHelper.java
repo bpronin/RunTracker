@@ -66,11 +66,34 @@ public class RunDatabaseHelper extends SQLiteOpenHelper {
         return getWritableDatabase().insert(TABLE_LOCATION, null, cv);
     }
 
+    public RunCursor queryRun(long id) {
+        Cursor wrapped = getReadableDatabase().query(TABLE_RUN,
+                null, // Все столбцы
+                COLUMN_RUN_ID + " = ?",
+                new String[]{String.valueOf(id)},
+                null, // group by
+                null, // order by
+                null, // having
+                "1");
+        return new RunCursor(wrapped);
+    }
+
     public RunCursor queryRuns() {
         Cursor wrapped = getReadableDatabase().query(TABLE_RUN, null, null, null, null, null,
                 COLUMN_RUN_START_DATE + " asc");
-//        wrapped.close();
         return new RunCursor(wrapped);
+    }
+
+    public LocationCursor queryLastLocationForRun(long runId) {
+        Cursor wrapped = getReadableDatabase().query(TABLE_LOCATION,
+                null, // Все столбцы
+                COLUMN_LOCATION_RUN_ID + " = ?", // Ограничить заданной серией
+                new String[]{String.valueOf(runId)},
+                null, // group by
+                null, // having
+                COLUMN_LOCATION_TIMESTAMP + " desc", // Сначала самые новые
+                "1"); // limit 1
+        return new LocationCursor(wrapped);
     }
 
     public static class RunCursor extends CursorWrapper {
@@ -85,6 +108,27 @@ public class RunDatabaseHelper extends SQLiteOpenHelper {
                 run.setId(getLong(getColumnIndex(COLUMN_RUN_ID)));
                 run.setStartDate(new Date(getLong(getColumnIndex(COLUMN_RUN_START_DATE))));
                 return run;
+            } else {
+                return null;
+            }
+        }
+    }
+
+    public static class LocationCursor extends CursorWrapper {
+
+        public LocationCursor(Cursor c) {
+            super(c);
+        }
+
+        public Location getLocation() {
+            if (!isBeforeFirst() && !isAfterLast()) {
+                String provider = getString(getColumnIndex(COLUMN_LOCATION_PROVIDER));
+                Location loc = new Location(provider);
+                loc.setLongitude(getDouble(getColumnIndex(COLUMN_LOCATION_LONGITUDE)));
+                loc.setLatitude(getDouble(getColumnIndex(COLUMN_LOCATION_LATITUDE)));
+                loc.setAltitude(getDouble(getColumnIndex(COLUMN_LOCATION_ALTITUDE)));
+                loc.setTime(getLong(getColumnIndex(COLUMN_LOCATION_TIMESTAMP)));
+                return loc;
             } else {
                 return null;
             }

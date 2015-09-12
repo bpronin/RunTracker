@@ -1,18 +1,38 @@
 package com.bo.android.runtracker;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
 public class RunActivity extends AppCompatActivity {
 
+    public static final String EXTRA_RUN_ID = "com.bignerdranch.android.runtracker.run_id";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        FragmentManager fm = getSupportFragmentManager();
+        Fragment fragment = fm.findFragmentById(R.id.fragmentContainer);
+        if (fragment == null) {
+            fragment = createFragment();
+            fm.beginTransaction()
+                    .add(R.id.fragmentContainer, fragment)
+                    .commit();
+        }
     }
 
+    protected Fragment createFragment() {
+        long runId = getIntent().getLongExtra(EXTRA_RUN_ID, -1);
+        if (runId != -1) {
+            return RunFragment.newInstance(runId);
+        } else {
+            return new RunFragment();
+        }
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

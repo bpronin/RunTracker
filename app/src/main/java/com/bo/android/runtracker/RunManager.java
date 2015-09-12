@@ -96,6 +96,19 @@ public class RunManager {
         mPrefs.edit().remove(PREF_CURRENT_RUN_ID).commit();
     }
 
+    public Run getRun(long id) {
+        Run run = null;
+
+        RunDatabaseHelper.RunCursor cursor = mHelper.queryRun(id);
+        cursor.moveToFirst();
+        if (!cursor.isAfterLast()){
+            run = cursor.getRun();
+        }
+        cursor.close();
+
+        return run;
+    }
+
     private Run insertRun() {
         Run run = new Run();
         run.setId(mHelper.insertRun(run));
@@ -110,6 +123,16 @@ public class RunManager {
         }
     }
 
+    public Location getLastLocationForRun(long runId) {
+        Location location = null;
+        RunDatabaseHelper.LocationCursor cursor = mHelper.queryLastLocationForRun(runId);
+        cursor.moveToFirst();
+        if (!cursor.isAfterLast())
+            location = cursor.getLocation();
+        cursor.close();
+        return location;
+    }
+
     public RunDatabaseHelper.RunCursor queryRuns() {
         return mHelper.queryRuns();
     }
@@ -118,4 +141,7 @@ public class RunManager {
         return getLocationPendingIntent(false) != null;
     }
 
+    public boolean isTrackingRun(Run run) {
+        return run != null && run.getId() == mCurrentRunId;
+    }
 }
