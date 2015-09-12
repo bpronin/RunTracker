@@ -31,8 +31,9 @@ public class RunListFragment extends ListFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-        mCursor = RunManager.get(getActivity()).queryRuns();
-        RunCursorAdapter adapter = new RunCursorAdapter(getActivity(), mCursor);
+        RunManager runManager = RunManager.get(getActivity());
+        mCursor = runManager.queryRuns();
+        RunCursorAdapter adapter = new RunCursorAdapter(getActivity(), runManager, mCursor);
         setListAdapter(adapter);
     }
 
@@ -77,10 +78,12 @@ public class RunListFragment extends ListFragment {
 
     private static class RunCursorAdapter extends CursorAdapter {
 
+        private RunManager runManager;
         private RunDatabaseHelper.RunCursor mRunCursor;
 
-        public RunCursorAdapter(Context context, RunDatabaseHelper.RunCursor cursor) {
+        public RunCursorAdapter(Context context, RunManager runManager, RunDatabaseHelper.RunCursor cursor) {
             super(context, cursor, 0);
+            this.runManager = runManager;
             mRunCursor = cursor;
         }
 
@@ -96,13 +99,12 @@ public class RunListFragment extends ListFragment {
             Run run = mRunCursor.getRun();
             TextView startDateTextView = (TextView) view;
             String cellText = context.getString(R.string.cell_text, run.getStartDate());
+
+            if (runManager.isTrackingRun(run)){
+                cellText += "[ACTIVE]";
+            }
+
             startDateTextView.setText(cellText);
         }
     }
 }
-
-//    @Override
-//    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-//                             Bundle savedInstanceState) {
-//        return inflater.inflate(R.layout.fragment_run_list, container, false);
-//    }
