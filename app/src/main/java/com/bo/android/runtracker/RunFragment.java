@@ -16,7 +16,7 @@ import android.widget.Toast;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class MainFragment extends Fragment {
+public class RunFragment extends Fragment {
 
     private Button mStartButton, mStopButton;
     private TextView mStartedTextView;
@@ -29,7 +29,7 @@ public class MainFragment extends Fragment {
     private Location mLastLocation;
     private BroadcastReceiver mLocationReceiver;
 
-    public MainFragment() {
+    public RunFragment() {
         mLocationReceiver = new LocationReceiver();
     }
 
