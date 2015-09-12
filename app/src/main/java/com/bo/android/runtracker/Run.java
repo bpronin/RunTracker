@@ -9,22 +9,31 @@ import java.util.Date;
  */
 public class Run {
 
-    private Date mStartDate;
+    private long id;
+    private Date startDate;
 
     public Run() {
-        mStartDate = new Date();
+        startDate = new Date();
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 
     public Date getStartDate() {
-        return mStartDate;
+        return startDate;
     }
 
     public void setStartDate(Date startDate) {
-        mStartDate = startDate;
+        this.startDate = startDate;
     }
 
     public int getDurationSeconds(long endMillis) {
-        return (int)((endMillis - mStartDate.getTime()) / 1000);
+        return (int)((endMillis - startDate.getTime()) / 1000);
     }
 
     public static String formatDuration(int durationSeconds) {

@@ -54,8 +54,7 @@ public class MainFragment extends Fragment {
         mStartButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mRunManager.startLocationUpdates();
-                mRun = new Run();
+                mRun = mRunManager.startNewRun();
                 updateUI();
             }
         });
@@ -64,7 +63,7 @@ public class MainFragment extends Fragment {
         mStopButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mRunManager.stopLocationUpdates();
+                mRunManager.stopRun();
                 updateUI();
             }
         });
