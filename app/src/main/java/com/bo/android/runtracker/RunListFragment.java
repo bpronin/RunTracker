@@ -3,6 +3,7 @@ package com.bo.android.runtracker;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.support.v4.widget.CursorAdapter;
@@ -35,6 +36,12 @@ public class RunListFragment extends ListFragment {
         mCursor = runManager.queryRuns();
         RunCursorAdapter adapter = new RunCursorAdapter(getActivity(), runManager, mCursor);
         setListAdapter(adapter);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        ((RunCursorAdapter) getListAdapter()).notifyDataSetChanged();
     }
 
     @Override
@@ -80,18 +87,22 @@ public class RunListFragment extends ListFragment {
 
         private RunManager runManager;
         private RunDatabaseHelper.RunCursor mRunCursor;
+        private Drawable activeBackground;
+        private Drawable defaultBackground;
 
         public RunCursorAdapter(Context context, RunManager runManager, RunDatabaseHelper.RunCursor cursor) {
             super(context, cursor, 0);
+            activeBackground = context.getResources().getDrawable(android.R.color.darker_gray);
             this.runManager = runManager;
             mRunCursor = cursor;
         }
 
         @Override
         public View newView(Context context, Cursor cursor, ViewGroup parent) {
-            LayoutInflater inflater = (LayoutInflater) context
-                    .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            return inflater.inflate(android.R.layout.simple_list_item_1, parent, false);
+            LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            TextView view = (TextView) inflater.inflate(android.R.layout.simple_list_item_1, parent, false);
+            defaultBackground = view.getBackground();
+            return view;
         }
 
         @Override
@@ -99,12 +110,9 @@ public class RunListFragment extends ListFragment {
             Run run = mRunCursor.getRun();
             TextView startDateTextView = (TextView) view;
             String cellText = context.getString(R.string.cell_text, run.getStartDate());
-
-            if (runManager.isTrackingRun(run)){
-                cellText += "[ACTIVE]";
-            }
-
             startDateTextView.setText(cellText);
+            startDateTextView.setBackgroundDrawable(runManager.isTrackingRun(run) ? activeBackground : defaultBackground);
         }
+
     }
 }
