@@ -1,11 +1,14 @@
 package com.bo.android.runtracker;
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationManager;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 /**
@@ -21,6 +24,8 @@ public class RunManager {
     private static final String TAG = "RunManager";
 
     private static RunManager sRunManager;
+
+    private final NotificationManager notificationManager;
     private Context mAppContext;
     private LocationManager mLocationManager;
     private RunDatabaseHelper mHelper;
@@ -30,9 +35,10 @@ public class RunManager {
     private RunManager(Context appContext) {
         mAppContext = appContext;
         mLocationManager = (LocationManager) mAppContext.getSystemService(Context.LOCATION_SERVICE);
+        notificationManager = (NotificationManager) mAppContext.getSystemService(Context.NOTIFICATION_SERVICE);
         mHelper = new RunDatabaseHelper(mAppContext);
         mPrefs = mAppContext.getSharedPreferences(PREFS_FILE, Context.MODE_PRIVATE);
-        mCurrentRunId = mPrefs.getLong(PREF_CURRENT_RUN_ID, -1);
+        mCurrentRunId = isTrackingRun() ? mPrefs.getLong(PREF_CURRENT_RUN_ID, -1) : -1;
     }
 
     public static RunManager get(Context c) {
@@ -59,6 +65,7 @@ public class RunManager {
                 broadcastLocation(lastKnown);
             }
             mLocationManager.requestLocationUpdates(provider, 0, 0, pi);
+            startStatusBarNotification();
         } catch (SecurityException x) {
             Log.e(TAG, "requestLocationUpdates failed", x);
         }
@@ -69,6 +76,7 @@ public class RunManager {
         if (pi != null) {
             mLocationManager.removeUpdates(pi);
             pi.cancel();
+            stopStatusBarNotification();
         }
     }
 
@@ -101,7 +109,7 @@ public class RunManager {
 
         RunDatabaseHelper.RunCursor cursor = mHelper.queryRun(id);
         cursor.moveToFirst();
-        if (!cursor.isAfterLast()){
+        if (!cursor.isAfterLast()) {
             run = cursor.getRun();
         }
         cursor.close();
@@ -144,4 +152,25 @@ public class RunManager {
     public boolean isTrackingRun(Run run) {
         return run != null && run.getId() == mCurrentRunId;
     }
+
+    private void startStatusBarNotification() {
+        /* this will restore application as app launcher does*/
+        Intent intent = new Intent(mAppContext, RunListActivity.class);
+        intent.setAction(Intent.ACTION_MAIN);
+        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+
+        Notification notification = new NotificationCompat.Builder(mAppContext)
+                .setTicker("Run Tracker is active")
+                .setSmallIcon(android.R.drawable.ic_menu_report_image)
+                .setContentTitle("Run Tracker")
+                .setContentText("Run Tracker is active #" + mCurrentRunId)
+                .setContentIntent(PendingIntent.getActivity(mAppContext, 0, intent, 0))
+                .build();
+        notificationManager.notify(ACTION_LOCATION, 0, notification);
+    }
+
+    private void stopStatusBarNotification() {
+        notificationManager.cancel(ACTION_LOCATION, 0);
+    }
+
 }
