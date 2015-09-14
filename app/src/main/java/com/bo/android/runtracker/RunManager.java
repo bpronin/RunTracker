@@ -163,7 +163,7 @@ public class RunManager {
                 .setTicker("Run Tracker is active")
                 .setSmallIcon(android.R.drawable.ic_menu_report_image)
                 .setContentTitle("Run Tracker")
-                .setContentText("Run Tracker is active #" + mCurrentRunId)
+                .setContentText("Tracking series #" + mCurrentRunId)
                 .setContentIntent(PendingIntent.getActivity(mAppContext, 0, intent, 0))
                 .build();
         notificationManager.notify(ACTION_LOCATION, 0, notification);

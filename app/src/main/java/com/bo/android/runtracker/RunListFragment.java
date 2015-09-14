@@ -6,6 +6,8 @@ import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.Loader;
 import android.support.v4.widget.CursorAdapter;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -23,7 +25,8 @@ public class RunListFragment extends ListFragment {
 
     private static final int REQUEST_NEW_RUN = 0;
 
-    private RunDatabaseHelper.RunCursor mCursor;
+    private RunManager runManager;
+    private RunListCursorLoaderCallbacks loaderCallbacks = new RunListCursorLoaderCallbacks();
 
     public RunListFragment() {
     }
@@ -32,22 +35,17 @@ public class RunListFragment extends ListFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-        RunManager runManager = RunManager.get(getActivity());
-        mCursor = runManager.queryRuns();
-        RunCursorAdapter adapter = new RunCursorAdapter(getActivity(), runManager, mCursor);
-        setListAdapter(adapter);
+        runManager = RunManager.get(getActivity());
+        getLoaderManager().initLoader(0, null, loaderCallbacks);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        ((RunCursorAdapter) getListAdapter()).notifyDataSetChanged();
-    }
-
-    @Override
-    public void onDestroy() {
-        mCursor.close();
-        super.onDestroy();
+        RunCursorAdapter adapter = (RunCursorAdapter) getListAdapter();
+        if (adapter != null) {
+            adapter.notifyDataSetChanged();
+        }
     }
 
     @Override
@@ -78,8 +76,40 @@ public class RunListFragment extends ListFragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (REQUEST_NEW_RUN == requestCode) {
-            mCursor.requery();
-            ((RunCursorAdapter) getListAdapter()).notifyDataSetChanged();
+            getLoaderManager().restartLoader(0, null, loaderCallbacks);
+        }
+    }
+
+
+    private static class RunListCursorLoader extends SQLiteCursorLoader {
+
+        public RunListCursorLoader(Context context) {
+            super(context);
+        }
+
+        @Override
+        protected Cursor loadCursor() {
+            return RunManager.get(getContext()).queryRuns();
+        }
+
+    }
+
+    private class RunListCursorLoaderCallbacks implements LoaderCallbacks<Cursor> {
+
+        @Override
+        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+            return new RunListCursorLoader(getActivity());
+        }
+
+        @Override
+        public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+            RunCursorAdapter adapter = new RunCursorAdapter(getActivity(), runManager, (RunDatabaseHelper.RunCursor) cursor);
+            setListAdapter(adapter);
+        }
+
+        @Override
+        public void onLoaderReset(Loader<Cursor> loader) {
+            setListAdapter(null);
         }
     }
 
